@@ -5,6 +5,8 @@ VisualStudioVersion = 16.0.30406.217
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WordReportTest", "WordReportTest.csproj", "{99DF6C19-25A2-4933-8904-5A2A31689ACE}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenXmlPowerTools", "OpenXmlPowerTools\OpenXmlPowerTools.csproj", "{494E706D-A606-4D92-AB27-97E34BEE027D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{99DF6C19-25A2-4933-8904-5A2A31689ACE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{99DF6C19-25A2-4933-8904-5A2A31689ACE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{99DF6C19-25A2-4933-8904-5A2A31689ACE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{494E706D-A606-4D92-AB27-97E34BEE027D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{494E706D-A606-4D92-AB27-97E34BEE027D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{494E706D-A606-4D92-AB27-97E34BEE027D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{494E706D-A606-4D92-AB27-97E34BEE027D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
