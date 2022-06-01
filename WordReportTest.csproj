@@ -73,8 +73,8 @@
     <Compile Include="DataModels\ReportModel\Report.cs" />
     <Compile Include="DataModels\ReportModel\Result.cs" />
     <Compile Include="DataModels\ReportModel\CycleResult.cs" />
-    <Compile Include="Export\Field.cs" />
-    <Compile Include="Export\FieldItem.cs" />
+    <Compile Include="Export\ExportField.cs" />
+    <Compile Include="Export\ExportFieldItem.cs" />
     <Compile Include="Export\WordExport.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>

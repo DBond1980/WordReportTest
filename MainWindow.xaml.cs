@@ -17,9 +17,11 @@ using System.Windows.Shapes;
 using System.Xml.Linq;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Spreadsheet;
 using DocumentFormat.OpenXml.Wordprocessing;
 using OpenXmlPowerTools;
 using WordReportTest.DataModels.ReportModel;
+using WordReportTest.Export;
 
 namespace WordReportTest
 {
@@ -31,23 +33,32 @@ namespace WordReportTest
         public MainWindow()
         {
             InitializeComponent();
+
+            var r = GetReport();
+            ExportField.InitFields(r);
         }
 
         private void ButtonStart_Click(object sender, RoutedEventArgs e)
         {
+            var wordExport = new WordExport();
+            wordExport.Export(ExportField.ExportFields,
+                @"C:\Work\C#\WordReportTest\!DOCX\Report1.docx",
+                @"C:\Work\C#\WordReportTest\!DOCX\TempDocx.docx");
 
-            File.Copy(@"C:\Work\C#\WordReportTest\!DOCX\TempDocx.docx",
-                @"C:\Work\C#\WordReportTest\!DOCX\Report1.docx", true);
 
-            using (var wordDoc = WordprocessingDocument.Open(@"C:\Work\C#\WordReportTest\!DOCX\Report1.docx", true))
-            {
-                wordDoc.ChangeDocumentType(WordprocessingDocumentType.Document); //Если на основе .dotx - меняем тип
 
-                TextReplacer.SearchAndReplace(wordDoc, "{Manufacturer}", "OLTEST", false);
-                RepeatingBlockCopy(wordDoc);
+            //File.Copy(@"C:\Work\C#\WordReportTest\!DOCX\TempDocx.docx",
+            //    @"C:\Work\C#\WordReportTest\!DOCX\Report1.docx", true);
+
+            //using (var wordDoc = WordprocessingDocument.Open(@"C:\Work\C#\WordReportTest\!DOCX\Report1.docx", true))
+            //{
+            //    wordDoc.ChangeDocumentType(WordprocessingDocumentType.Document); //Если на основе .dotx - меняем тип
+
+            //    TextReplacer.SearchAndReplace(wordDoc, "{Manufacturer}", "OLTEST", false);
+            //    RepeatingBlockCopy(wordDoc);
 
                 
-            }
+            //}
 
         }
 
