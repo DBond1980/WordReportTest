@@ -85,7 +85,8 @@ namespace WordReportTest.Export
 
 
         public string Name { get; set; }
-        public string NameDig => (((int)_type) + 1) + "." + _number;
+        //public string NameDig => (((int)_type) + 1) + "." + _number;
+        public string NameDig => _number.ToString();
         public bool CanContainsDecSep { get; set; }
         public bool HasBackground { get; set; }
 

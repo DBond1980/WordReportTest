@@ -34,12 +34,14 @@ namespace WordReportTest
         {
             InitializeComponent();
 
-            var r = GetReport();
-            ExportField.InitFields(r);
         }
 
         private void ButtonStart_Click(object sender, RoutedEventArgs e)
         {
+            var r = GetReport();
+            ExportField.InitFields(r);
+
+
             var wordExport = new WordExport();
             wordExport.Export(ExportField.ExportFields,
                 @"C:\Work\C#\WordReportTest\!DOCX\Report1.docx",
@@ -230,20 +232,26 @@ namespace WordReportTest
             };
             //reports.Add(report);
 
-            for (int rt = 1; rt <= 4; rt++)
+            var term = new[] { "a-b", "a-b", "b-c", "b-c", "c-a", "c-a" };
+            var burden = new[] { "10", "2,5", "10", "2,5", "10", "2,5" };
+            var voltage = new[] { "80", "100", "120" };
+            var mVoltage = new[] { "80,1", "100,2", "120,3" };
+
+            for (int rt = 1; rt <= 6; rt++)
             {
+
                 var resultTable = new CycleResult
                 {
-                    Terminals = "a-b " + r + "_" + rt,
+                    Terminals = term[rt-1],
                     RatedSecondaryVoltage = "100 " + r + "_" + rt,
-                    Class = "0,1 " + r + "_" + rt,
+                    Class = "0,5",
                     RatedPowerFactor = "0.8",
-                    RatedBurden1 = (rt + r).ToString(),
-                    RatedBurden2 = (rt + r).ToString(),
-                    RatedBurden3 = (rt + r).ToString(),
-                    Burden1 = (rt + r / 2).ToString(),
-                    Burden2 = (rt + r / 2).ToString(),
-                    Burden3 = (rt + r / 2).ToString(),
+                    RatedBurden1 = burden[0],
+                    RatedBurden2 = burden[0],
+                    RatedBurden3 = burden[0],
+                    Burden1 = burden[rt - 1],
+                    Burden2 = burden[rt - 1],
+                    Burden3 = burden[rt - 1],
                     Thd = (2 + 10 * (rnd.NextDouble() * 2 - 1)).ToString("G3"),
                     ThdVolt = (100 + 10 * (rnd.NextDouble() * 2 - 1)).ToString("F0"),
                     ThdBack = "Green",
@@ -255,16 +263,16 @@ namespace WordReportTest
                 };
                 report.CycleResults.Add(resultTable);
 
-                for (int rr = 1; rr <= 4; rr++)
+                for (int rr = 1; rr <= 3; rr++)
                 {
                     var resultRow = new Result
                     {
-                        Voltage = (rr * 20 + r + rt).ToString(),
-                        MeasVoltage = (rr * 20 + r + rt + 1).ToString(),
+                        Voltage = voltage[rr-1],
+                        MeasVoltage = mVoltage[rr-1],
                         RatioError = (0.2 + 0.5 * (rnd.NextDouble() * 2 - 1)).ToString("G3"),
-                        RatioErrorBack = "Green",
+                        RatioErrorBack = "Orange",
                         PhaseDisp = (2 + 10 * (rnd.NextDouble() * 2 - 1)).ToString("G3"),
-                        PhaseDispBack = "Green",
+                        PhaseDispBack = "Red",
                         Thd = (2 + 10 * (rnd.NextDouble() * 2 - 1)).ToString("G3"),
                         Asymmetry = (2 + 10 * (rnd.NextDouble() * 2 - 1)).ToString("G3"),
                         Frequency = (50 + 0.1 * (rnd.NextDouble() * 2 - 1)).ToString("F2"),

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using DocumentFormat.OpenXml;
@@ -17,36 +18,45 @@ namespace WordReportTest.Export
         //Экспорт отчета в Word
         public void Export(List<ExportField> fields, string file, string template)
         {
-            var doc = GenerateDocumentFromTemplate(file, template);
+            var wordDoc = GenerateDocumentFromTemplate(file, template);
 
-            var xDoc = doc.MainDocumentPart.GetXDocument();
+            var xDoc = wordDoc.MainDocumentPart.GetXDocument();
+
             if ((xDoc.Root?.FirstNode) is XElement xBody)
             {
                 CombineAttributeRun(xBody);
 
-                doc.MainDocumentPart.Document.Body = new Body(xBody.ToString());
+
+                fields.ForEach(f => f.Items.ForEach(fi =>
+                {
+                    if (fi.HasBackground)
+                    {
+                        SetBackground(xBody, fi.AttrText, fi.Background, false);
+                        SetBackground(xBody, fi.AttrDig, fi.Background, false);
+                    }
+                }));
+
+                var xBodyStr = xBody.ToString();
+
+                fields.ForEach(f => f.Items.ForEach(fi =>
+                {
+                    xBodyStr = SearchAndReplace(xBodyStr, fi.AttrText, fi.Content);
+                    xBodyStr = SearchAndReplace(xBodyStr, fi.AttrDig, fi.Content);
+
+                    if (fi.IsUserField)
+                        xBodyStr = SearchAndReplace(xBodyStr, fi.AttrUserField, fi.Content);
+
+                }));
+
+                xBodyStr = ClearAttributes(xBodyStr);
+
+                wordDoc.MainDocumentPart.Document.Body = new Body(xBodyStr);
             }
 
-            //fields.ForEach(f => f.Items.ForEach(fi =>
-            //{
-            //    if (fi.HasBackground)
-            //    {
-            //        SetBackground(doc, fi.AttrText, fi.Background);
-            //        SetBackground(doc, fi.AttrDig, fi.Background);
-            //    }
-
-            //    SearchAndReplace(doc, fi.AttrText, fi.Content);
-            //    SearchAndReplace(doc, fi.AttrDig, fi.Content);
-
-            //    if(fi.IsUserField)
-            //        SearchAndReplace(doc, fi.AttrUserField, fi.Content);
-            //}));
-
-            //ClearAttributes(doc);
-
-            doc.Dispose();
+            wordDoc.Dispose();
         }
 
+        //Создание документа на основе шаблона
         private WordprocessingDocument GenerateDocumentFromTemplate(string file, string template)
         {
             File.Copy(template, file, true);
@@ -57,53 +67,119 @@ namespace WordReportTest.Export
             return wordDoc;
         }
 
+        //Подготовка атрибутов, т.е. перенос каждого атрибута в один run и преобразование в заглавные буквы,
+        //для легкой и быстрой дальнейшей замены (после этого можно заменять преобразовав в файл в строку)
         private void CombineAttributeRun(XElement xEl)
         {
-            var ps = xEl.Descendants(W.p).ToList();
-            foreach (var p in ps)
+            var w = xEl.Name.Namespace;
+            var xParagraphs = xEl.Descendants(w + "p").ToList();
+            foreach (var xParagraph in xParagraphs)
             {
-                string contents = p.Descendants(W.t).Select(t => (string)t).StringConcatenate();
-                if (contents.Contains("{") && contents.Contains("}"))
+                var contents = xParagraph.Descendants(w + "t").Select(t => (string)t).StringConcatenate();
+                if (!contents.Contains("{") || !contents.Contains("}")) continue;
+
+                var xRuns = xParagraph.Descendants(w + "r").ToList();
+                XElement xTextAttr = null;
+                foreach (var xRun in xRuns)
                 {
-                    int i1 = contents.IndexOf('{');
-                    int i2 = contents.IndexOf('}');
-                    if(i2 < i1) continue; //Error
-                    var attr = contents.Substring(i1, i2 - i1 + 1);
+                    var xText = xRun.Element(w + "t");
+                    if (xText == null) continue;
+                    if (xText.Value.Contains('{'))
+                    {
+                        xText.Value = xText.Value.ToUpper();
+                        if (xText.Value.Contains('}')) { xTextAttr = null; continue;}
+                        xTextAttr = xText;
+                        continue;
+                    }
 
-                    var rs = p.Descendants(W.r).ToList();
-                    //for
+                    if (xTextAttr!=null)
+                    {
+                        xTextAttr.Value += xText.Value.ToUpper();
+                        xRun.Remove();
+                    }
 
-
-                    //rs.ForEach(r=>r.Remove());
+                    if (xText.Value.Contains('}')) xTextAttr = null;
                 }
             }
-
         }
 
-        private void SearchAndReplace(WordprocessingDocument doc, string search, string replace)
+        //Поиск и удаление оставшихся атрибутов
+        private string ClearAttributes(string str)
         {
-            TextReplacer.SearchAndReplace(doc, search, replace, false);
+            // @"{([^\{\}]*)}" - все символы заключенные в фигурные скобки 
+            //                   если туда не входят сами фигурные скобки
+            str = (new Regex(@"{([^\{\}]*)}")).Replace(str, "");
+            return str;
         }
 
-        private void SetBackground(WordprocessingDocument doc, string text, string back)
+        //Поиск атрибутов и их замена
+        private string SearchAndReplace(string str, string search, string replace)
         {
-            
+            return str.Replace(search.ToUpper(), replace);
+            //TextReplacer.SearchAndReplace(doc, search, replace, false);
         }
 
-        private void ClearAttributes(WordprocessingDocument doc)
+        private void SetBackground(XElement xEl, string text, string back, bool isBlackWhite)
         {
+            if(string.IsNullOrWhiteSpace(back)) return;
+            back = back.ToUpper();
+            if (back == "GREEN") return;
 
+            var w = xEl.Name.Namespace;
+            var xParagraphs = xEl.Descendants(w + "p").ToList();
+
+            foreach (var xParagraph in xParagraphs)
+            {
+                var contents = xParagraph.Descendants(w + "t").Select(t => (string)t).StringConcatenate();
+                if (!contents.Contains(text)) continue;
+
+                var xRuns = xParagraph.Descendants(w + "r").ToList();
+                foreach (var xRun in xRuns)
+                {
+                    var xText = xRun.Element(w + "t");
+                    if(xText == null) continue;
+                    if (xText.Value.Contains(text))
+                    {
+                        //Подчеркивание run
+                        var xRunProp = xRun.Element(w + "rPr");
+                        AddOrChangeXEl(xRunProp, "u", "val",
+                            back == "RED" ? "single" : "dotted");
+
+                        if (!isBlackWhite)
+                        {
+                            if (xParagraph.Parent?.Name == w + "tc")
+                            {//Закрасить ячейку если параграф находится в таблице
+                                var xTProp = xParagraph.Parent?.Element(w + "tcPr");
+                                AddOrChangeXEl(xTProp, "shd","fill",
+                                    back == "RED" ? "FF7D7D" : "FFC000");
+                            }
+                            else
+                            {//Закрасить текст если не находится в таблице
+                                AddOrChangeXEl(xRunProp, "shd", "fill",
+                                    back == "RED" ? "FF7D7D" : "FFC000");
+                            }
+                        }
+                    }
+                }
+            }
         }
 
-
-        public static string ParagraphText(XElement e)
+        //Добавление или изменение элемента с атрибутом
+        private void AddOrChangeXEl(XElement xElParent, string xElName, string xAttrName, string xAttrValue)
         {
-            XNamespace w = e.Name.Namespace;
-            return e
-                .Elements(w + "r")
-                .Elements(w + "t")
-                .StringConcatenate(element => (string)element);
+            if(xElParent == null) return;
+            var w = xElParent.Name.Namespace;
+            var xEl = xElParent.Element(w + xElName);
+            if (xEl == null)
+            {//Не существует -> создаем новый
+                xElParent.Add(new XElement(w + xElName, new XAttribute(w + xAttrName, xAttrValue)));
+            }
+            else
+            {//Элемент существует -> добавляет атрибут
+                xEl.SetAttributeValue(w + xAttrName, xAttrValue);
+            }
         }
-
     }
+
+
 }

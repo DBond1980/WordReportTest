@@ -36,7 +36,7 @@ namespace WordReportTest.Export
         public bool IsUserField => _userFieldName != null;
         public string AttrUserField => "{" + _userFieldName + "}";
 
-        public bool HasBackground => _userFieldName != null;
+        public bool HasBackground => _back != null;
         public string Background => _back;
 
         public ExportFieldItem(ExportField exportField, string content, int id1 = -1, int id2 = -1, int id3 = -1,
