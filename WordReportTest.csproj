@@ -76,6 +76,7 @@
     <Compile Include="Export\ExportField.cs" />
     <Compile Include="Export\ExportFieldItem.cs" />
     <Compile Include="Export\WordExport.cs" />
+    <Compile Include="Export\WordExportTable.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>

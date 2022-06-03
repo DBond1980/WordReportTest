@@ -531,13 +531,10 @@ namespace OpenXmlPowerTools
 
         public static string StringConcatenate(this IEnumerable<string> source)
         {
-            var ssss = source.ToList();
-            string str = source.Aggregate(
+            return source.Aggregate(
                 new StringBuilder(),
                 (sb, s) => sb.Append(s),
                 sb => sb.ToString());
-
-            return str;
         }
 
         public static string StringConcatenate<T>(this IEnumerable<T> source, Func<T, string> projectionFunc)

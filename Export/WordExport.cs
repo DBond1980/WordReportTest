@@ -26,6 +26,7 @@ namespace WordReportTest.Export
             {
                 CombineAttributeRun(xBody);
 
+                WordExportTable.InitTables(xBody);
 
                 fields.ForEach(f => f.Items.ForEach(fi =>
                 {
@@ -36,19 +37,20 @@ namespace WordReportTest.Export
                     }
                 }));
 
-                var xBodyStr = xBody.ToString();
-
                 fields.ForEach(f => f.Items.ForEach(fi =>
                 {
-                    xBodyStr = SearchAndReplace(xBodyStr, fi.AttrText, fi.Content);
-                    xBodyStr = SearchAndReplace(xBodyStr, fi.AttrDig, fi.Content);
+
+                    SearchAndReplace(xBody, fi.AttrText, fi.Content);
+                    SearchAndReplace(xBody, fi.AttrDig, fi.Content);
 
                     if (fi.IsUserField)
-                        xBodyStr = SearchAndReplace(xBodyStr, fi.AttrUserField, fi.Content);
-
+                        SearchAndReplace(xBody, fi.AttrUserField, fi.Content);
                 }));
 
-                xBodyStr = ClearAttributes(xBodyStr);
+                WordExportTable.DeleteEmptyRows();
+
+                var xBodyStr = ClearAttributes(xBody.ToString());
+                //var xBodyStr = xBody.ToString();
 
                 wordDoc.MainDocumentPart.Document.Body = new Body(xBodyStr);
             }
@@ -119,6 +121,36 @@ namespace WordReportTest.Export
             //TextReplacer.SearchAndReplace(doc, search, replace, false);
         }
 
+        //Поиск атрибутов и их замена
+        private void SearchAndReplace(XElement xEl, string search, string replace)
+        {
+            var w = xEl.Name.Namespace;
+
+            search = search.ToUpper();
+
+            var xParagraphs = xEl.Descendants(w + "p").ToList();
+            foreach (var xParagraph in xParagraphs)
+            {
+                var contents = xParagraph.Descendants(w + "t").Select(t => (string)t).StringConcatenate();
+                if (!contents.Contains(search)) continue;
+
+                var xRuns = xParagraph.Descendants(w + "r").ToList();
+
+                foreach (var xRun in xRuns)
+                {
+                    var xText = xRun.Element(w + "t");
+                    if (xText == null) continue;
+                    if (xText.Value.Contains(search))
+                    {
+                        xText.Value = xText.Value.Replace(search.ToUpper(), replace);
+                    }
+                }
+            }
+            //return str.Replace(search.ToUpper(), replace);
+            //TextReplacer.SearchAndReplace(doc, search, replace, false);
+        }
+
+        //Выделение элементов выходящих за допустимые границы или приближаются к ним
         private void SetBackground(XElement xEl, string text, string back, bool isBlackWhite)
         {
             if(string.IsNullOrWhiteSpace(back)) return;
@@ -179,7 +211,6 @@ namespace WordReportTest.Export
                 xEl.SetAttributeValue(w + xAttrName, xAttrValue);
             }
         }
+
     }
-
-
 }
