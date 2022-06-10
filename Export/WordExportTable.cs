@@ -16,7 +16,7 @@ namespace WordReportTest.Export
         private bool _propDeleteEmptyRows = false;
         private bool _propAutoNum = false;
         private int _propAutoNumN = 0;
-        private bool _propAutoRows = false;
+        private bool _propAutoRowNum = false;
         private static XNamespace w;
 
         private static List<WordExportTable> _tables = new List<WordExportTable>();
@@ -54,7 +54,7 @@ namespace WordReportTest.Export
             //Инициализируем свойства
             var props = propStr.Split('/', '\\', '(', ')', '[', ']', '{', '}');
 
-            //Удаление пустых радов из таблицы
+            //Удаление пустых рядов из таблицы
             _propDeleteEmptyRows = props.FirstOrDefault(p => p.Contains("DELETEEMPTYROWS")) != null;
 
             //Автоматическое добавление номера таблицы в отчете
@@ -74,10 +74,49 @@ namespace WordReportTest.Export
             else _propAutoNum = false;
 
             //Автоматическое добавление номера ряда
-            _propAutoRows = props.FirstOrDefault(p => p == "AUTOROWS") != null;
+            //т.е. ко всем атрибутам добавляется номер ряда (или, другими словами, добавляется число повторений одинаковых атрибутов)
+            _propAutoRowNum = props.FirstOrDefault(p => p == "AUTOROWNUM") != null;
         }
 
-        //Удаление пустых радов из таблицы
+        //Автоматическое добавление номера ряда
+        //т.е. ко всем атрибутам добавляется номер ряда (или, другими словами, добавляется число повторений одинаковых атрибутов)
+        public static void AutomaticRowNumbering()
+        {
+            foreach (var wordExportTable in _tables)
+            {
+                if (!wordExportTable._propAutoRowNum) continue;
+
+                var xTexts = wordExportTable._xTable.Descendants(w + "t").ToList()
+                    .FindAll(xt => xt.Value.Contains('{') || xt.Value.Contains('}'));
+
+                while (xTexts.Count > 0)
+                {
+                    var attr = (new Regex(@"{([^\{\}]*)}")).Match(xTexts[0].Value).Value;
+                    //var newAttr = 
+                    //var stIndex = xTexts[0].Value.IndexOf('{');
+
+                }
+
+                //foreach (var xRow in xRows)
+                //{
+                //    var xCells = xRow.Descendants(w + "tc").ToList();
+                    //var isEmpty = true;
+                    //foreach (var xCell in xCells)
+                    //{
+                    //    var contents = xCell.Descendants(w + "t").Select(t => (string)t).StringConcatenate();
+
+                    //    if ((contents.Contains('{') && contents.Contains('}')) ||
+                    //        string.IsNullOrWhiteSpace(contents)) continue;
+
+                    //    isEmpty = false;
+                    //    break;
+                    //}
+                    //if (isEmpty) xRow.Remove();
+                //}
+            }
+        }
+
+        //Удаление пустых рядов из таблицы
         public static void DeleteEmptyRows()
         {
             foreach (var wordExportTable in _tables)

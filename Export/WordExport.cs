@@ -27,6 +27,7 @@ namespace WordReportTest.Export
                 CombineAttributeRun(xBody);
 
                 WordExportTable.InitTables(xBody);
+                WordExportTable.AutomaticRowNumbering();
 
                 fields.ForEach(f => f.Items.ForEach(fi =>
                 {
@@ -39,7 +40,6 @@ namespace WordReportTest.Export
 
                 fields.ForEach(f => f.Items.ForEach(fi =>
                 {
-
                     SearchAndReplace(xBody, fi.AttrText, fi.Content);
                     SearchAndReplace(xBody, fi.AttrDig, fi.Content);
 
