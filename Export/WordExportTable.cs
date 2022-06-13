@@ -17,6 +17,7 @@ namespace WordReportTest.Export
         private bool _propAutoNum = false;
         private int _propAutoNumN = 0;
         private bool _propAutoRowNum = false;
+        private bool _propContinue = false;
         private static XNamespace w;
 
         private static List<WordExportTable> _tables = new List<WordExportTable>();
@@ -74,12 +75,79 @@ namespace WordReportTest.Export
             else _propAutoNum = false;
 
             //Автоматическое добавление номера ряда
-            //т.е. ко всем атрибутам добавляется номер ряда (или, другими словами, добавляется число повторений одинаковых атрибутов)
+            //т.е. ко всем атрибутам добавляется номер ряда (или, точнее, добавляется число повторений одинаковых атрибутов)
             _propAutoRowNum = props.FirstOrDefault(p => p == "AUTOROWNUM") != null;
+
+            //Продолжение таблицы
+            _propContinue = props.FirstOrDefault(p => p == "CONTINUE") != null;
+        }
+
+        //Соединение таблиц
+        public static void MergeTables()
+        {
+            XElement mainTable = null;
+            foreach (var wordExportTable in _tables)
+            {
+                if (!wordExportTable._propContinue)
+                {
+                    mainTable = wordExportTable._xTable;
+                    continue;
+                }
+
+                var trs = wordExportTable._xTable.Descendants(w + "tr");
+                mainTable?.Add(trs);
+                wordExportTable._xTable.Remove();
+            }
+        }
+
+
+        //Автоматическое добавление номера таблицы в отчете
+        //т.е. если AutoNum(2) то {1/7} -> {2.1/7} и {3.5/2} -> {2.2.5/2)
+        //или если AutoNum(n) то {1/7} -> {n.1/7} и {3.5/2} -> {n.2.5/2)
+        public static void AutomaticNumbering()
+        {
+            foreach (var wordExportTable in _tables)
+            {
+                if (!wordExportTable._propAutoNum) continue;
+
+                var xTexts = wordExportTable._xTable.Descendants(w + "t").ToList()
+                    .FindAll(xt => xt.Value.Contains('{') || xt.Value.Contains('}'));
+
+                //Поиск всех атрибутов, к которым нужно добавить номер
+                var attrList = new List<string>();
+
+                foreach (var xText in xTexts)
+                {
+                    var match = (new Regex(@"{([^\{\}]*)}")).Match(xText.Value);
+                    if (!attrList.Contains(match.Value) && !match.Value.Contains('$'))
+                        attrList.Add(match.Value);
+                }
+
+                //Добавления номера в атрибут
+                var xTextChangeList = new List<XElement>();
+                foreach (var attr in attrList)
+                {
+                    var nStr = wordExportTable._propAutoNumN == 0 ? "N" : wordExportTable._propAutoNumN.ToString();
+                    foreach (var xText in xTexts)
+                    {
+                        if (xText.Value.Contains(attr) && !xTextChangeList.Contains(xText))
+                        {
+                            var attrReplace = attr.Insert(1, attr[1] == '/' ? nStr : nStr + ".");
+                            xText.Value = xText.Value.Replace(attr, attrReplace);
+                            xTextChangeList.Add(xText);
+                        }
+                    }
+                }
+
+                //Удаление '$'
+                foreach (var xText in xTexts)
+                    xText.Value = xText.Value.Replace("{$", "{");
+            }
         }
 
         //Автоматическое добавление номера ряда
         //т.е. ко всем атрибутам добавляется номер ряда (или, другими словами, добавляется число повторений одинаковых атрибутов)
+        //Если атрибут содержит символ '$' он не изменяется, а '$' удаляется
         public static void AutomaticRowNumbering()
         {
             foreach (var wordExportTable in _tables)
@@ -89,30 +157,36 @@ namespace WordReportTest.Export
                 var xTexts = wordExportTable._xTable.Descendants(w + "t").ToList()
                     .FindAll(xt => xt.Value.Contains('{') || xt.Value.Contains('}'));
 
-                while (xTexts.Count > 0)
-                {
-                    var attr = (new Regex(@"{([^\{\}]*)}")).Match(xTexts[0].Value).Value;
-                    //var newAttr = 
-                    //var stIndex = xTexts[0].Value.IndexOf('{');
+                //Поиск всех атрибутов, к которым нужно добавить номер
+                var attrList = new List<string>();
 
+                foreach (var xText in xTexts)
+                {
+                    var match = (new Regex(@"{([^\{\}]*)}")).Match(xText.Value);
+                    if (!attrList.Contains(match.Value) && !match.Value.Contains('$'))
+                        attrList.Add(match.Value);
                 }
 
-                //foreach (var xRow in xRows)
-                //{
-                //    var xCells = xRow.Descendants(w + "tc").ToList();
-                    //var isEmpty = true;
-                    //foreach (var xCell in xCells)
-                    //{
-                    //    var contents = xCell.Descendants(w + "t").Select(t => (string)t).StringConcatenate();
+                //Добавления номера в атрибут
+                var xTextChangeList = new List<XElement>();
+                foreach (var attr in attrList)
+                {
+                    var n = 1;
+                    foreach (var xText in xTexts)
+                    {
+                        if (xText.Value.Contains(attr) && !xTextChangeList.Contains(xText))
+                        {
+                            var attrReplace = attr.Insert(1, attr[1] == '/' ? n.ToString() : n + ".");
+                            xText.Value = xText.Value.Replace(attr, attrReplace);
+                            n++;
+                            xTextChangeList.Add(xText);
+                        }
+                    }
+                }
 
-                    //    if ((contents.Contains('{') && contents.Contains('}')) ||
-                    //        string.IsNullOrWhiteSpace(contents)) continue;
-
-                    //    isEmpty = false;
-                    //    break;
-                    //}
-                    //if (isEmpty) xRow.Remove();
-                //}
+                //Удаление '$'
+                foreach (var xText in xTexts)
+                    xText.Value = xText.Value.Replace("{$", "{");
             }
         }
 

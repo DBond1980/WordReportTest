@@ -28,6 +28,7 @@ namespace WordReportTest.Export
 
                 WordExportTable.InitTables(xBody);
                 WordExportTable.AutomaticRowNumbering();
+                WordExportTable.AutomaticNumbering();
 
                 fields.ForEach(f => f.Items.ForEach(fi =>
                 {
@@ -48,6 +49,7 @@ namespace WordReportTest.Export
                 }));
 
                 WordExportTable.DeleteEmptyRows();
+                WordExportTable.MergeTables();
 
                 var xBodyStr = ClearAttributes(xBody.ToString());
                 //var xBodyStr = xBody.ToString();
@@ -71,6 +73,7 @@ namespace WordReportTest.Export
 
         //Подготовка атрибутов, т.е. перенос каждого атрибута в один run и преобразование в заглавные буквы,
         //для легкой и быстрой дальнейшей замены (после этого можно заменять преобразовав в файл в строку)
+        //Каждый run может содержать только один атрибут
         private void CombineAttributeRun(XElement xEl)
         {
             var w = xEl.Name.Namespace;
@@ -78,9 +81,40 @@ namespace WordReportTest.Export
             foreach (var xParagraph in xParagraphs)
             {
                 var contents = xParagraph.Descendants(w + "t").Select(t => (string)t).StringConcatenate();
-                if (!contents.Contains("{") || !contents.Contains("}")) continue;
+                if (!contents.Contains('{') || !contents.Contains('}')) continue;
 
+                //Разбитые run, которые содержат фигурные скобки на runы содержащие один символ
+                //для корректного дальнейшего группирования
                 var xRuns = xParagraph.Descendants(w + "r").ToList();
+                foreach (var xRun in xRuns)
+                {
+                    var xText = xRun.Element(w + "t");
+                    if (xText == null) continue;
+                    if ((xText.Value.Contains('{') || xText.Value.Contains('}'))
+                        && xText.Value.Length > 1)
+                    {
+                        var text = xText.Value.ToCharArray();
+                        foreach (var t in text)
+                        {
+                            var xRunNew = new XElement(xRun);
+                            var xTextNew = xRunNew.Element(w + "t");
+                            if (xTextNew != null)
+                            {
+                                if (xTextNew.Value[0] == ' ' || xTextNew.Value[xTextNew.Value.Length - 1] == ' ')
+                                    xTextNew.SetAttributeValue(XNamespace.Xml + "space", "preserve");
+                                else
+                                    xTextNew.Attribute(XNamespace.Xml + "space")?.Remove();
+
+                                xTextNew.Value = t.ToString();
+                            }
+                            xRun.AddBeforeSelf(xRunNew);
+                        }
+                        xRun.Remove();
+                    }
+                }
+
+                //Группирование run
+                xRuns = xParagraph.Descendants(w + "r").ToList();
                 XElement xTextAttr = null;
                 foreach (var xRun in xRuns)
                 {
@@ -89,12 +123,13 @@ namespace WordReportTest.Export
                     if (xText.Value.Contains('{'))
                     {
                         xText.Value = xText.Value.ToUpper();
-                        if (xText.Value.Contains('}')) { xTextAttr = null; continue;}
+                        if (xText.Value.Contains('}')) { xTextAttr = null; continue; }
                         xTextAttr = xText;
+                        xTextAttr.Attribute(XNamespace.Xml + "space")?.Remove();
                         continue;
                     }
 
-                    if (xTextAttr!=null)
+                    if (xTextAttr != null)
                     {
                         xTextAttr.Value += xText.Value.ToUpper();
                         xRun.Remove();
@@ -103,6 +138,12 @@ namespace WordReportTest.Export
                     if (xText.Value.Contains('}')) xTextAttr = null;
                 }
             }
+        }
+
+        //Копирование повторяющегося блока
+        private void RepeatingBlockCopy(XElement xEl, int copyNumber)
+        {
+
         }
 
         //Поиск и удаление оставшихся атрибутов

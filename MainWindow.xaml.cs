@@ -269,9 +269,9 @@ namespace WordReportTest
                     {
                         Voltage = voltage[rr-1],
                         MeasVoltage = mVoltage[rr-1],
-                        RatioError = (0.2 + 0.5 * (rnd.NextDouble() * 2 - 1)).ToString("G3"),
+                        RatioError = (0.2 + 0.5 * (rnd.NextDouble() * 2 - 1)).ToString("F3"),
                         RatioErrorBack = rr == 2 ? "Green" : "Orange",
-                        PhaseDisp = (2 + 10 * (rnd.NextDouble() * 2 - 1)).ToString("G3"),
+                        PhaseDisp = (2 + 10 * (rnd.NextDouble() * 2 - 1)).ToString("F3"),
                         PhaseDispBack = rr == 3 ? "Green" : "Red",
                         Thd = (2 + 10 * (rnd.NextDouble() * 2 - 1)).ToString("G3"),
                         Asymmetry = (2 + 10 * (rnd.NextDouble() * 2 - 1)).ToString("G3"),
@@ -284,8 +284,8 @@ namespace WordReportTest
                     resultRow.PhaseDispSamples = "";
                     for (int rs = 1; rs <= 10; rs++)
                     {
-                        resultRow.RatioErrorSamples += (0.2 + 0.5 * (rnd.NextDouble() * 2 - 1)).ToString("G3") + ";";
-                        resultRow.PhaseDispSamples += (2 + 10 * (rnd.NextDouble() * 2 - 1)).ToString("G3") + ";";
+                        resultRow.RatioErrorSamples += (0.2 + 0.5 * (rnd.NextDouble() * 2 - 1)).ToString("F3") + ";";
+                        resultRow.PhaseDispSamples += (2 + 10 * (rnd.NextDouble() * 2 - 1)).ToString("F2") + ";";
                     }
                 }
             }
