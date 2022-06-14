@@ -22,6 +22,8 @@ namespace WordReportTest.Export
 
             var xDoc = wordDoc.MainDocumentPart.GetXDocument();
 
+            //wordDoc.MainDocumentPart.AddImagePart(I)
+
             if ((xDoc.Root?.FirstNode) is XElement xBody)
             {
                 CombineAttributeRun(xBody);
@@ -29,6 +31,11 @@ namespace WordReportTest.Export
                 WordExportTable.InitTables(xBody);
                 WordExportTable.AutomaticRowNumbering();
                 WordExportTable.AutomaticNumbering();
+
+                if(RepeatingBlockCopy(xBody, ExportField.MeasGroupNum))
+                    WordExportTable.InitTables(xBody); //Переинициализация таблиц т.к. могло изменится их количество
+
+                WordExportTable.RemoveTableAttributes(xBody);
 
                 fields.ForEach(f => f.Items.ForEach(fi =>
                 {
@@ -140,10 +147,58 @@ namespace WordReportTest.Export
             }
         }
 
-        //Копирование повторяющегося блока
-        private void RepeatingBlockCopy(XElement xEl, int copyNumber)
+        //Копирование повторяющегося блока с заменой в атрибутах N на номер блока
+        private bool RepeatingBlockCopy(XElement xEl, int copyNumber)
         {
+            var w = xEl.Name.Namespace;
 
+            XElement beginElement = null;
+            XElement endElement = null;
+            int beginIndex = -1;
+            int endIndex = -1;
+
+            //Поиск начала и конца повторяющегося блока
+            var xElements = xEl.Elements().ToList();
+            foreach (var xElement in xElements)
+            {
+                if(xElement.Name != w + "p") continue;
+
+                var contents = xElement.Descendants(w + "t").Select(t => (string)t).StringConcatenate();
+                if (contents.ToUpper().Contains("{RepeatingBlock.Begin}".ToUpper()))
+                {
+                    beginElement = xElement;
+                    beginIndex = xElements.IndexOf(beginElement);
+                }
+                if (contents.ToUpper().Contains("{RepeatingBlock.End}".ToUpper()))
+                {
+                    endElement = xElement;
+                    endIndex = xElements.IndexOf(endElement);
+                }
+            }
+
+            if (beginElement != null && endElement != null && beginIndex < endIndex)
+            {
+                var repeatElements = xElements.GetRange(beginIndex + 1, endIndex - beginIndex - 1).ToList();
+
+                for (int i = 0; i < copyNumber; i++)
+                {
+                    foreach (var repeatElement in repeatElements)
+                    {
+                        var repeatElementCopy = new XElement(repeatElement);
+                        SearchAndReplace(repeatElementCopy, "{N/", "{" + (i + 1) + "/");
+                        SearchAndReplace(repeatElementCopy, "{N.", "{" + (i + 1) + ".");
+                        endElement.AddBeforeSelf(repeatElementCopy);
+                    }
+                }
+
+                beginElement.Remove();
+                endElement.Remove();
+                repeatElements.Remove();
+
+                return true;
+            }
+
+            return false;
         }
 
         //Поиск и удаление оставшихся атрибутов
@@ -169,7 +224,10 @@ namespace WordReportTest.Export
 
             search = search.ToUpper();
 
-            var xParagraphs = xEl.Descendants(w + "p").ToList();
+            var xParagraphs = xEl.Name != w + "p" ? 
+                xEl.Descendants(w + "p").ToList() : 
+                new List<XElement>(new []{ xEl });
+
             foreach (var xParagraph in xParagraphs)
             {
                 var contents = xParagraph.Descendants(w + "t").Select(t => (string)t).StringConcatenate();

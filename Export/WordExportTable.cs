@@ -12,12 +12,12 @@ namespace WordReportTest.Export
 {
     public class WordExportTable
     {
-        private XElement _xTable;
-        private bool _propDeleteEmptyRows = false;
-        private bool _propAutoNum = false;
-        private int _propAutoNumN = 0;
-        private bool _propAutoRowNum = false;
-        private bool _propContinue = false;
+        private readonly XElement _xTable;
+        private readonly bool _propDeleteEmptyRows = false;
+        private readonly bool _propAutoNum = false;
+        private readonly int _propAutoNumN = 0;
+        private readonly bool _propAutoRowNum = false;
+        private readonly bool _propContinue = false;
         private static XNamespace w;
 
         private static List<WordExportTable> _tables = new List<WordExportTable>();
@@ -39,7 +39,7 @@ namespace WordReportTest.Export
                     {
                         _tables.Add(new WordExportTable(contents, tbl));
                     }
-                    xParagraph.Remove();
+                    //xParagraph.Remove();
                 }
             }
         }
@@ -215,6 +215,18 @@ namespace WordReportTest.Export
                     }
                     if (isEmpty) xRow.Remove(); 
                 }
+            }
+        }
+
+        //Удаление параграфов с атрибутами таблиц
+        public static void RemoveTableAttributes(XElement xEl)
+        {
+            var xParagraphs = xEl.Descendants(w + "p").ToList();
+
+            foreach (var xParagraph in xParagraphs)
+            {
+                var contents = xParagraph.Descendants(w + "t").Select(t => (string)t).StringConcatenate();
+                if (contents.Contains("{#TABLE")) xParagraph.Remove();
             }
         }
     }

@@ -30,10 +30,11 @@ namespace WordReportTest
     /// </summary>
     public partial class MainWindow : Window
     {
+        static public MainWindow MW;
         public MainWindow()
         {
             InitializeComponent();
-
+            MW = this;
         }
 
         private void ButtonStart_Click(object sender, RoutedEventArgs e)
@@ -42,11 +43,16 @@ namespace WordReportTest
             ExportField.InitFields(r);
 
 
+            //WordExportImage.InsertPicture(@"C:\Work\C#\WordReportTest\!DOCX\Report1.docx", GridMain);
+
+            //WordExportImage.SetImageObject(GridMain);
+
             var wordExport = new WordExport();
             wordExport.Export(ExportField.ExportFields,
                 @"C:\Work\C#\WordReportTest\!DOCX\Report1.docx",
                 @"C:\Work\C#\WordReportTest\!DOCX\TempDocx.docx");
 
+            //WordExportImage.InsertPicture(@"C:\Work\C#\WordReportTest\!DOCX\Report1.docx");
 
 
             //File.Copy(@"C:\Work\C#\WordReportTest\!DOCX\TempDocx.docx",
@@ -59,7 +65,7 @@ namespace WordReportTest
             //    TextReplacer.SearchAndReplace(wordDoc, "{Manufacturer}", "OLTEST", false);
             //    RepeatingBlockCopy(wordDoc);
 
-                
+
             //}
 
         }

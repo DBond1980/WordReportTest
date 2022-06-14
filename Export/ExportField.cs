@@ -74,6 +74,8 @@ namespace WordReportTest.Export
             new ExportField("PhaseDispSample",     2, FieldType.Samples, true),
         };
 
+        public static int MeasGroupNum = 0;
+
         public ExportField(string name, int number, FieldType type, bool decSep = false, bool back = false)
         {
             Name = name;
@@ -132,6 +134,7 @@ namespace WordReportTest.Export
             //Объединение циклов по Terminals и Class
             int id1 = 0;
             var cycleGroupList = r.CycleResults.GroupBy(c => c.Terminals + c.Class, t => t).ToList();
+            MeasGroupNum = cycleGroupList.Count;
             foreach (var cycleGroup in cycleGroupList)
             {
                 id1++;
