@@ -1,86 +1,80 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using DocumentFormat.OpenXml.Spreadsheet;
 using WordReportTest.DataModels.ReportModel;
 
 namespace WordReportTest.Export
 {
-    public enum FieldType
-    {//Типы полей
-        Report,         //DataModel.ReportModel.Report
-        CyclesGroup,    //DataModel.ReportModel.CycleResult...
-        Result,         //DataModel.ReportModel.Result
-        Samples,        //DataModel.ReportModel.Result.Samples...
-    }
     public class ExportField
     {
         public static readonly List<ExportField> ExportFields = new List<ExportField>
         {
-            new ExportField("ReportNumber",         1, FieldType.Report),
-            new ExportField("Date",                 2, FieldType.Report),
-            new ExportField("Time",                 3, FieldType.Report),
-            new ExportField("DateTime",             4, FieldType.Report),
-            new ExportField("Type",                 5, FieldType.Report),
-            new ExportField("CardComment",          6, FieldType.Report),
-            new ExportField("Manufacturer",         7, FieldType.Report),
-            new ExportField("Year",                 8, FieldType.Report),
-            new ExportField("Standard",             9, FieldType.Report),
-            new ExportField("SerialNumber",        10, FieldType.Report),
-            new ExportField("Owner",               11, FieldType.Report),
-            new ExportField("Customer",            12, FieldType.Report),
-            new ExportField("Substation",          13, FieldType.Report),
-            new ExportField("RatedPrimaryVoltage", 14, FieldType.Report, true),
-            new ExportField("RatedFrequency",      15, FieldType.Report, true),
-            new ExportField("RatedVoltageFactor",  16, FieldType.Report, true),
-            new ExportField("Humidity",            17, FieldType.Report, true),
-            new ExportField("Temperature",         18, FieldType.Report, true),
-            new ExportField("Conclusion",          19, FieldType.Report),
-            new ExportField("TestedBy",            20, FieldType.Report),
-            new ExportField("StateVerOfficer",     21, FieldType.Report),
-            new ExportField("WarningZone",         22, FieldType.Report),
-            new ExportField("UserField1",          23, FieldType.Report),
-            new ExportField("UserField2",          24, FieldType.Report),
-            new ExportField("UserField3",          25, FieldType.Report),
-            new ExportField("UserField4",          26, FieldType.Report),
-            new ExportField("UserField5",          27, FieldType.Report),
+            //Report Fields -> {ReportNumber}, {1}
+            new ExportField("ReportNumber",         1),
+            new ExportField("Date",                 2),
+            new ExportField("Time",                 3),
+            new ExportField("DateTime",             4),
+            new ExportField("Type",                 5),
+            new ExportField("CardComment",          6),
+            new ExportField("Manufacturer",         7),
+            new ExportField("Year",                 8),
+            new ExportField("Standard",             9),
+            new ExportField("SerialNumber",        10),
+            new ExportField("Owner",               11),
+            new ExportField("Customer",            12),
+            new ExportField("Substation",          13),
+            new ExportField("RatedPrimaryVoltage", 14, true),
+            new ExportField("RatedFrequency",      15, true),
+            new ExportField("RatedVoltageFactor",  16, true),
+            new ExportField("Humidity",            17, true),
+            new ExportField("Temperature",         18, true),
+            new ExportField("Conclusion",          19),
+            new ExportField("TestedBy",            20),
+            new ExportField("StateVerOfficer",     21),
+            new ExportField("WarningZone",         22),
+            new ExportField("UserField1",          23),
+            new ExportField("UserField2",          24),
+            new ExportField("UserField3",          25),
+            new ExportField("UserField4",          26),
+            new ExportField("UserField5",          27),
 
-            new ExportField("Terminals",            1, FieldType.CyclesGroup),
-            new ExportField("Class",                2, FieldType.CyclesGroup, true),
-            new ExportField("RatedBurden",          3, FieldType.CyclesGroup, true),
-            new ExportField("RatedBurden1",         4, FieldType.CyclesGroup, true),
-            new ExportField("RatedBurden2",         5, FieldType.CyclesGroup, true),
-            new ExportField("RatedBurden3",         6, FieldType.CyclesGroup, true),
-            new ExportField("Thd",                  7, FieldType.CyclesGroup, true, true),
-            new ExportField("ThdVolt",              8, FieldType.CyclesGroup, true),
-            new ExportField("Asymmetry",            9, FieldType.CyclesGroup, true, true),
-            new ExportField("AsymmetryVolt",       10, FieldType.CyclesGroup, true),
+            //CyclesGroup Fields -> {1/Terminals}, {1/1}
+            new ExportField("Terminals",            1),
+            new ExportField("Class",                2, true),
+            new ExportField("RatedBurden",          3, true),
+            new ExportField("RatedBurden1",         4, true),
+            new ExportField("RatedBurden2",         5, true),
+            new ExportField("RatedBurden3",         6, true),
+            new ExportField("Thd",                  7, true, true),
+            new ExportField("ThdVolt",              8, true),
+            new ExportField("Asymmetry",            9, true, true),
+            new ExportField("AsymmetryVolt",       10, true),
 
-            new ExportField("Voltage",              1, FieldType.Result, true),
-            new ExportField("MeasVoltage",          2, FieldType.Result, true),
-            new ExportField("Burden",               3, FieldType.Result, true),
-            new ExportField("Burden1",              4, FieldType.Result, true),
-            new ExportField("Burden2",              5, FieldType.Result, true),
-            new ExportField("Burden3",              6, FieldType.Result, true),
-            new ExportField("RatioError",           7, FieldType.Result, true, true),
-            new ExportField("PhaseDisp",            8, FieldType.Result, true, true),
-            new ExportField("Thd",                  9, FieldType.Result, true),
-            new ExportField("Asymmetry",           10, FieldType.Result, true),
-            new ExportField("Frequency",           11, FieldType.Result, true),
+            //Result Fields -> {1.1/Voltage}, {1.1/1}
+            new ExportField("Voltage",              1, true),
+            new ExportField("MeasVoltage",          2, true),
+            new ExportField("Burden",               3, true),
+            new ExportField("Burden1",              4, true),
+            new ExportField("Burden2",              5, true),
+            new ExportField("Burden3",              6, true),
+            new ExportField("RatioError",           7, true, true),
+            new ExportField("PhaseDisp",            8, true, true),
+            new ExportField("Thd",                  9, true),
+            new ExportField("Asymmetry",           10, true),
+            new ExportField("Frequency",           11, true),
 
-            new ExportField("RatioErrorSample",    1, FieldType.Samples, true),
-            new ExportField("PhaseDispSample",     2, FieldType.Samples, true),
+            //Samples Fields -> {1.1.1/RatioErrorSample}, {1.1.1/1}
+            new ExportField("RatioErrorSample",    1, true),
+            new ExportField("PhaseDispSample",     2, true)
         };
 
         public static int MeasGroupNum = 0;
 
-        public ExportField(string name, int number, FieldType type, bool decSep = false, bool back = false)
+        public ExportField(string name, int number, bool decSep = false, bool back = false)
         {
             Name = name;
             _number = number;
-            _type = type;
+            //_type = type;
             CanContainsDecSep = decSep;
             HasBackground = back;
         }
@@ -93,7 +87,7 @@ namespace WordReportTest.Export
         public bool HasBackground { get; set; }
 
         private int _number;
-        private FieldType _type;
+        //private FieldType _type;
 
         public List<ExportFieldItem> Items => _items;
         private List<ExportFieldItem> _items = new List<ExportFieldItem>();
